@@ -60,13 +60,13 @@ YGGIO_URL=https://<din-yggio> node ~/tools/yggio-mcp.mjs --check   # öppnar web
 claude mcp add yggio --scope user -e YGGIO_URL=https://<din-yggio> -e YGGIO_READ_ONLY=true -- node ~/tools/yggio-mcp.mjs
 ```
 
-- Token sparas i `~/.yggio-mcp/tokens.json` (bara läsbar för dig) och delas mellan Claude-sessioner. När den gått ut (Yggio-realmen: 6 h) öppnar servern webbläsaren igen vid nästa anrop. Är du fortfarande inloggad i Keycloak går det igenom direkt, utan ny kod.
+- Token sparas i `~/.yggio-mcp/tokens.json` (bara läsbar för dig) och delas mellan Claude-sessioner. När den gått ut (6 h i Yggios standardrealm, kan vara annat i er drift) öppnar servern webbläsaren igen vid nästa anrop. Är du fortfarande inloggad i Keycloak går det igenom direkt, utan ny kod.
 - Sätt `BROWSER=none` om webbläsaren inte ska öppnas automatiskt, till exempel över SSH. Adressen skrivs då ut på stderr.
 - **Engångsinställning i Keycloak (admin):** lägg till `http://127.0.0.1:53682/*` under *Valid Redirect URIs* för klienten `yggio-services` i realmen `yggio`. Annars svarar Keycloak *Invalid parameter: redirect_uri*. Om porten är upptagen kan du välja en annan med `YGGIO_OAUTH_PORT` och registrera den i stället.
 
 ## Installera i Claude Desktop
 
-Dubbelklicka på `yggio-mcp-0.2.0.mcpb` (eller dra in den under *Settings → Extensions*). Fyll sedan i Yggio-adress, användarnamn och lösenord, och välj om den ska vara skrivskyddad. Lämna användarnamn och lösenord tomma om du loggar in med 2FA (se nedan). Lösenordet sparas i operativsystemets nyckelring.
+Dubbelklicka på `yggio-mcp-0.2.0.mcpb` (eller dra in den under *Settings → Extensions*). Fyll sedan i Yggio-adress, användarnamn och lösenord, och välj om den ska vara skrivskyddad. Lämna användarnamn och lösenord tomma om du loggar in med 2FA (se ovan). Lösenordet sparas i operativsystemets nyckelring.
 
 ## Inställningar
 
@@ -74,7 +74,7 @@ Dubbelklicka på `yggio-mcp-0.2.0.mcpb` (eller dra in den under *Settings → Ex
 |---|---|
 | `YGGIO_URL` | Adressen du öppnar Yggio på i webbläsaren. En avslutande `/api` eller `/swagger` tas bort automatiskt. |
 | `YGGIO_USERNAME` / `YGGIO_PASSWORD` | Loggar in via `POST /api/auth/local`. Servern loggar in igen själv när token går ut. Utelämnas de (och `YGGIO_TOKEN`) sker inloggningen i webbläsaren via Keycloak, se ovan. |
-| `YGGIO_TOKEN` | Alternativ till lösenord, till exempel för konton som bara har SSO. Den förnyas inte, så servern slutar fungera när token går ut. |
+| `YGGIO_TOKEN` | En färdig token i stället för inloggning. Den förnyas inte, så servern slutar fungera när token går ut. |
 | `YGGIO_OAUTH_PORT` | Lokal port för webbläsarinloggningens callback (standard 53682). |
 | `YGGIO_READ_ONLY` | `true` tar bort `yggio_api_write`. |
 | `YGGIO_TIMEOUT_MS` | Timeout per anrop (standard 30000). |

@@ -63,8 +63,10 @@ const manifest = {
       title: 'Username',
       description: 'Your Yggio username. Leave username and password empty to log in in the browser (Keycloak, works with 2FA).',
       required: false,
+      // Without a default an empty field is passed on as the literal "${user_config.username}".
+      default: '',
     },
-    password: {type: 'string', title: 'Password', description: 'Your Yggio password.', sensitive: true, required: false},
+    password: {type: 'string', title: 'Password', description: 'Your Yggio password.', sensitive: true, required: false, default: ''},
     read_only: {
       type: 'boolean',
       title: 'Read-only',

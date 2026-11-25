@@ -1,5 +1,5 @@
 export interface Config {
-  /** Yggio root, e.g. https://app.yggio.net (no trailing /api). */
+  /** Yggio root, the address you open Yggio at, e.g. https://yggio.example.com (no trailing /api). */
   baseUrl: string;
   username?: string;
   password?: string;
@@ -31,7 +31,7 @@ export const normalizeBaseUrl = (raw: string) => {
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
   const rawUrl = env.YGGIO_URL?.trim();
   if (!rawUrl) {
-    throw new Error('YGGIO_URL is not set (for example https://app.yggio.net).');
+    throw new Error('YGGIO_URL is not set (the address you open Yggio at in the browser).');
   }
   const token = env.YGGIO_TOKEN?.trim() || undefined;
   const username = env.YGGIO_USERNAME?.trim() || undefined;

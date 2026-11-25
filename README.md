@@ -81,3 +81,7 @@ npm run mcpb    # bygger dist/yggio-mcp-<version>.mcpb för Claude Desktop
 
 - `yggio_api_get` och `yggio_api_write` når bara sökvägar under `<YGGIO_URL>/api`. Sökvägar med `..`, kodade punkter/snedstreck, `//` eller query-sträng i sökvägen avvisas.
 - Servern kan inte göra mer än ditt Yggio-konto får göra, men allt som kontot får göra kan Claude göra via `yggio_api_write`. Använd läsläge eller ett begränsat konto om det inte är vad du vill.
+
+## Licens
+
+MIT, se [LICENSE](LICENSE).

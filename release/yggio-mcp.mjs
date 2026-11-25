@@ -247,8 +247,8 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path) {
-  return path ? path.reduce((acc, key) => acc?.[key], obj) : obj;
+function getElementAtPath(obj, path2) {
+  return path2 ? path2.reduce((acc, key) => acc?.[key], obj) : obj;
 }
 function promiseAllObject(promisesObj) {
   let keys = Object.keys(promisesObj), promises = keys.map((key) => promisesObj[key]);
@@ -486,10 +486,10 @@ function explicitlyAborted(x, startIndex = 0) {
       return !0;
   return !1;
 }
-function prefixIssues(path, issues) {
+function prefixIssues(path2, issues) {
   return issues.map((iss) => {
     var _a3;
-    return (_a3 = iss).path ?? (_a3.path = []), iss.path.unshift(path), iss;
+    return (_a3 = iss).path ?? (_a3.path = []), iss.path.unshift(path2), iss;
   });
 }
 function unwrapMessage(message) {
@@ -822,16 +822,16 @@ function flattenError(error2, mapper = (issue2) => issue2.message) {
   return { formErrors, fieldErrors };
 }
 function formatError(error2, mapper = (issue2) => issue2.message) {
-  let fieldErrors = { _errors: [] }, processError = (error3, path = []) => {
+  let fieldErrors = { _errors: [] }, processError = (error3, path2 = []) => {
     for (let issue2 of error3.issues)
       if (issue2.code === "invalid_union" && issue2.errors.length)
-        issue2.errors.map((issues) => processError({ issues }, [...path, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path2, ...issue2.path]));
       else if (issue2.code === "invalid_key")
-        processError({ issues: issue2.issues }, [...path, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
       else if (issue2.code === "invalid_element")
-        processError({ issues: issue2.issues }, [...path, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
       else {
-        let fullpath = [...path, ...issue2.path];
+        let fullpath = [...path2, ...issue2.path];
         if (fullpath.length === 0)
           fieldErrors._errors.push(mapper(issue2));
         else {
@@ -8070,8 +8070,8 @@ var rev2026Codec = {
     });
     let parsed = buildSchemas2026().RequestMetaEnvelopeSchema.safeParse(meta2);
     if (!parsed.success) for (let issue2 of parsed.error.issues) {
-      let path = issue2.path.map(String), key = path.length > 0 ? path.join(".") : "_meta";
-      path.length === 1 && issues.some((existing) => existing.key === key && existing.problem === "missing") || issues.push({
+      let path2 = issue2.path.map(String), key = path2.length > 0 ? path2.join(".") : "_meta";
+      path2.length === 1 && issues.some((existing) => existing.key === key && existing.problem === "missing") || issues.push({
         key,
         problem: issue2.message
       });
@@ -8379,31 +8379,31 @@ var X_MCP_HEADER_KEY = "x-mcp-header", RFC9110_TOKEN = /^[!#$%&'*+\-.^_`|~0-9A-Z
   "boolean"
 ]);
 function scanXMcpHeaderDeclarations(inputSchema) {
-  let declarations = [], seenLower = /* @__PURE__ */ new Map(), numberFault, visit = (node2, path, reachable) => {
+  let declarations = [], seenLower = /* @__PURE__ */ new Map(), numberFault, visit = (node2, path2, reachable) => {
     if (node2 === null || typeof node2 != "object") return;
     let schema = node2;
     if (X_MCP_HEADER_KEY in schema) {
-      if (!reachable || path.length === 0) return `${pathName(path)}: x-mcp-header is only permitted on properties statically reachable via a chain of 'properties' keys (not under items, additionalProperties, oneOf/anyOf/allOf/not, if/then/else, or $ref)`;
+      if (!reachable || path2.length === 0) return `${pathName(path2)}: x-mcp-header is only permitted on properties statically reachable via a chain of 'properties' keys (not under items, additionalProperties, oneOf/anyOf/allOf/not, if/then/else, or $ref)`;
       let raw = schema[X_MCP_HEADER_KEY];
-      if (typeof raw != "string" || raw.length === 0) return `${pathName(path)}: x-mcp-header MUST be a non-empty string`;
-      if (!RFC9110_TOKEN.test(raw)) return `${pathName(path)}: x-mcp-header '${raw}' is not a valid RFC 9110 token (no spaces, control characters or HTTP delimiters)`;
+      if (typeof raw != "string" || raw.length === 0) return `${pathName(path2)}: x-mcp-header MUST be a non-empty string`;
+      if (!RFC9110_TOKEN.test(raw)) return `${pathName(path2)}: x-mcp-header '${raw}' is not a valid RFC 9110 token (no spaces, control characters or HTTP delimiters)`;
       let type = typeof schema.type == "string" ? schema.type : void 0;
       if (type === void 0 || !PERMITTED_X_MCP_HEADER_TYPES.has(type)) {
-        let fault$1 = `${pathName(path)}: x-mcp-header is only permitted on primitive-typed properties (string, integer, boolean); got ${type ?? "<none>"}`;
+        let fault$1 = `${pathName(path2)}: x-mcp-header is only permitted on primitive-typed properties (string, integer, boolean); got ${type ?? "<none>"}`;
         if (type !== "number") return fault$1;
         numberFault ??= fault$1;
       }
       let lower = raw.toLowerCase(), prior = seenLower.get(lower);
       if (prior !== void 0) return `x-mcp-header '${raw}' is not case-insensitively unique (also declared as '${prior}')`;
       seenLower.set(lower, raw), declarations.push({
-        path,
+        path: path2,
         headerName: raw,
         type
       });
     }
     let properties = schema.properties;
     if (properties !== null && typeof properties == "object") for (let [key, child] of Object.entries(properties)) {
-      let fault$1 = visit(child, [...path, key], reachable);
+      let fault$1 = visit(child, [...path2, key], reachable);
       if (fault$1 !== void 0) return fault$1;
     }
     for (let k of NON_REACHABLE_SUBSCHEMA_KEYWORDS) {
@@ -8411,7 +8411,7 @@ function scanXMcpHeaderDeclarations(inputSchema) {
       if (sub === void 0) continue;
       let branches = Array.isArray(sub) ? sub : sub !== null && typeof sub == "object" && OBJECT_VALUED_SUBSCHEMA_KEYWORDS.has(k) ? Object.values(sub) : [sub];
       for (let branch of branches) {
-        let fault$1 = visit(branch, [...path, `<${k}>`], !1);
+        let fault$1 = visit(branch, [...path2, `<${k}>`], !1);
         if (fault$1 !== void 0) return fault$1;
       }
     }
@@ -8453,8 +8453,8 @@ var NON_REACHABLE_SUBSCHEMA_KEYWORDS = [
   "$defs",
   "definitions"
 ]);
-function pathName(path) {
-  return path.length === 0 ? "<root>" : path.join(".");
+function pathName(path2) {
+  return path2.length === 0 ? "<root>" : path2.join(".");
 }
 var HEADER_MISMATCH_ERROR_CODE = -32020, INBOUND_VALIDATION_LADDER = [
   {
@@ -8725,12 +8725,12 @@ var ROOT_KEYS = /* @__PURE__ */ new Set(["$schema", ...Object.keys(ElicitRequest
   boolean: shapeKeys([BooleanSchemaSchema]),
   array: shapeKeys([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema])
 }, SUPPORTED_STRING_FORMATS = new Set(StringSchemaSchema.shape.format.unwrap().options);
-function walkProperty(node2, path, vendor, unsupported) {
+function walkProperty(node2, path2, vendor, unsupported) {
   if (!isJsonObject(node2)) return node2;
   let allowedKeys = typeof node2.type == "string" && Object.hasOwn(PROPERTY_KEYS_BY_TYPE, node2.type) ? PROPERTY_KEYS_BY_TYPE[node2.type] : void 0;
   if (allowedKeys === void 0) return node2;
   let pruned = {};
-  for (let [key, value] of Object.entries(node2)) allowedKeys.has(key) || isAnnotationOnlyJsonSchemaKeyword(key) ? pruned[key] = value : key === "pattern" && node2.type === "string" && typeof node2.format == "string" ? SUPPORTED_STRING_FORMATS.has(node2.format) ? (typeof value != "string" || !isLibraryFormatPattern(node2.format, value, vendor)) && unsupported.push(`${path}.${key}`) : pruned[key] = value : unsupported.push(`${path}.${key}`);
+  for (let [key, value] of Object.entries(node2)) allowedKeys.has(key) || isAnnotationOnlyJsonSchemaKeyword(key) ? pruned[key] = value : key === "pattern" && node2.type === "string" && typeof node2.format == "string" ? SUPPORTED_STRING_FORMATS.has(node2.format) ? (typeof value != "string" || !isLibraryFormatPattern(node2.format, value, vendor)) && unsupported.push(`${path2}.${key}`) : pruned[key] = value : unsupported.push(`${path2}.${key}`);
   return pruned;
 }
 function walkRequestedSchema(converted, vendor) {
@@ -8744,9 +8744,9 @@ function describeUnsupportedProperties(pruned, fallback) {
   let offenders = Object.entries(pruned.properties).filter(([, node2]) => !parseSchema(PrimitiveSchemaDefinitionSchema, node2).success).map(([name]) => `properties.${name}`);
   return offenders.length > 0 ? offenders.join(", ") : fallback;
 }
-function findDroppedConstraintPaths(original, parsed, path = "") {
-  return Array.isArray(original) && Array.isArray(parsed) ? original.flatMap((item, index) => findDroppedConstraintPaths(item, parsed[index], `${path}[${index}]`)) : !isJsonObject(original) || !isJsonObject(parsed) ? [] : Object.entries(original).flatMap(([key, value]) => {
-    let childPath = path ? `${path}.${key}` : key;
+function findDroppedConstraintPaths(original, parsed, path2 = "") {
+  return Array.isArray(original) && Array.isArray(parsed) ? original.flatMap((item, index) => findDroppedConstraintPaths(item, parsed[index], `${path2}[${index}]`)) : !isJsonObject(original) || !isJsonObject(parsed) ? [] : Object.entries(original).flatMap(([key, value]) => {
+    let childPath = path2 ? `${path2}.${key}` : key;
     return Object.prototype.hasOwnProperty.call(parsed, key) ? findDroppedConstraintPaths(value, parsed[key], childPath) : isAnnotationOnlyJsonSchemaKeyword(key) ? [] : [childPath];
   });
 }
@@ -12153,8 +12153,8 @@ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
     for (let i = 0; i < str.length; i++) str[i] === token && ind++;
     return ind;
   }
-  function removeDotSegments(path) {
-    let input = path, output = [], nextSlash = -1, len = 0;
+  function removeDotSegments(path2) {
+    let input = path2, output = [], nextSlash = -1, len = 0;
     for (; len = input.length; ) {
       if (len === 1) {
         if (input === ".") break;
@@ -12420,8 +12420,8 @@ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
   }
   function wsSerialize(wsComponent) {
     if ((wsComponent.port === (wsIsSecure(wsComponent) ? 443 : 80) || wsComponent.port === "") && (wsComponent.port = void 0), typeof wsComponent.secure == "boolean" && (wsComponent.scheme = wsComponent.secure ? "wss" : "ws", wsComponent.secure = void 0), wsComponent.resourceName) {
-      let queryIndex = wsComponent.resourceName.indexOf("?"), path = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-      wsComponent.path = path && path !== "/" ? path : void 0, wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1), wsComponent.resourceName = void 0;
+      let queryIndex = wsComponent.resourceName.indexOf("?"), path2 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+      wsComponent.path = path2 && path2 !== "/" ? path2 : void 0, wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1), wsComponent.resourceName = void 0;
     }
     return wsComponent.fragment = void 0, wsComponent;
   }
@@ -12452,14 +12452,14 @@ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
     let urnComponent = uuidComponent;
     return urnComponent.nss = (uuidComponent.uuid || "").toLowerCase(), urnComponent;
   }
-  let http = {
+  let http2 = {
     scheme: "http",
     domainHost: !0,
     parse: httpParse,
     serialize: httpSerialize
   }, https = {
     scheme: "https",
-    domainHost: http.domainHost,
+    domainHost: http2.domainHost,
     parse: httpParse,
     serialize: httpSerialize
   }, ws = {
@@ -12473,7 +12473,7 @@ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
     parse: ws.parse,
     serialize: ws.serialize
   }, SCHEMES = {
-    http,
+    http: http2,
     https,
     ws,
     wss,
@@ -15646,10 +15646,10 @@ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
     if (!f) throw new Error(`Unknown format "${name}"`);
     return f;
   };
-  function addFormats2(ajv, list, fs, exportName) {
+  function addFormats2(ajv, list, fs2, exportName) {
     var _a3, _b;
     (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 || (_b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`);
-    for (let f of list) ajv.addFormat(f, fs[f]);
+    for (let f of list) ajv.addFormat(f, fs2[f]);
   }
   module.exports = exports = formatsPlugin, Object.defineProperty(exports, "__esModule", { value: !0 }), exports.default = formatsPlugin;
 })), import_ajv = require_ajv(), import__2019 = require__2019(), import__2020 = require__2020(), import_dist = /* @__PURE__ */ __toESM(require_dist(), 1), addFormats = import_dist.default;
@@ -17715,13 +17715,13 @@ var truthy = (value) => /^(1|true|yes|on)$/i.test(value?.trim() ?? ""), intOr = 
   if (!rawUrl)
     throw new Error("YGGIO_URL is not set (the address you open Yggio at in the browser).");
   let token = env.YGGIO_TOKEN?.trim() || void 0, username = env.YGGIO_USERNAME?.trim() || void 0, password = env.YGGIO_PASSWORD || void 0;
-  if (!token && !(username && password))
-    throw new Error("Set YGGIO_USERNAME and YGGIO_PASSWORD (or YGGIO_TOKEN).");
   return {
     baseUrl: normalizeBaseUrl(rawUrl),
     username,
     password,
     token,
+    browserLogin: !token && !(username && password),
+    oauthPort: intOr(env.YGGIO_OAUTH_PORT, 53682),
     readOnly: truthy(env.YGGIO_READ_ONLY),
     timeoutMs: intOr(env.YGGIO_TIMEOUT_MS, 3e4),
     maxResponseChars: intOr(env.YGGIO_MAX_RESPONSE_CHARS, 6e4)
@@ -17730,6 +17730,65 @@ var truthy = (value) => /^(1|true|yes|on)$/i.test(value?.trim() ?? ""), intOr = 
 
 // node_modules/@modelcontextprotocol/server/dist/index.mjs
 var DEFAULT_MAX_REQUEST_BODY_SIZE = 4 * 1024 * 1024;
+
+// src/oauth.ts
+import crypto2 from "node:crypto";
+import fs from "node:fs";
+import http from "node:http";
+import os from "node:os";
+import path from "node:path";
+import { spawn } from "node:child_process";
+var cacheFile = () => path.join(os.homedir(), ".yggio-mcp", "tokens.json"), readCache = () => {
+  try {
+    return JSON.parse(fs.readFileSync(cacheFile(), "utf8"));
+  } catch {
+    return {};
+  }
+}, readCachedToken = (baseUrl) => readCache()[baseUrl], saveCachedToken = (baseUrl, token) => {
+  fs.mkdirSync(path.dirname(cacheFile()), { recursive: !0, mode: 448 }), fs.writeFileSync(cacheFile(), JSON.stringify({ ...readCache(), [baseUrl]: token }, null, 2), { mode: 384 });
+}, openBrowser = (url2) => {
+  if (process.env.BROWSER === "none")
+    return;
+  let [cmd, args] = process.platform === "darwin" ? ["open", [url2]] : process.platform === "win32" ? ["rundll32", ["url.dll,FileProtocolHandler", url2]] : ["xdg-open", [url2]];
+  spawn(cmd, args, { stdio: "ignore", detached: !0 }).on("error", () => {
+  }).unref();
+}, browserLogin = async (port, get, timeoutMs = 18e4) => {
+  let info = await get("/auth/info", {}), { authorizationEndpoint, clientId, scope } = info.body ?? {};
+  if (info.status >= 400 || !authorizationEndpoint || !clientId)
+    throw new Error(`GET /api/auth/info returned HTTP ${info.status}, so the Keycloak login page could not be found.`);
+  let redirectUri = `http://127.0.0.1:${port}/callback`, state = crypto2.randomBytes(16).toString("hex"), authUrl = new URL(authorizationEndpoint);
+  authUrl.search = new URLSearchParams({
+    response_type: "code",
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: scope ?? "openid email",
+    state
+  }).toString();
+  let code = await new Promise((resolve, reject) => {
+    let server = http.createServer((req, res2) => {
+      let params = new URL(req.url ?? "/", redirectUri).searchParams;
+      if (params.get("state") !== state) {
+        res2.writeHead(404, { connection: "close" }).end();
+        return;
+      }
+      let got = params.get("code"), problem = params.get("error_description") ?? params.get("error") ?? "no code in the callback";
+      res2.writeHead(got ? 200 : 400, { "content-type": "text/plain; charset=utf-8", connection: "close" }).end(got ? "Inloggad i Yggio. Du kan st\xE4nga fliken." : `Inloggningen misslyckades: ${problem}`), finish(got ? void 0 : new Error(`Keycloak login failed: ${problem}`), got ?? "");
+    }), timer = setTimeout(() => finish(new Error(
+      `No Yggio login within ${timeoutMs / 1e3} s. Open ${authUrl.href} to log in. If Keycloak says the redirect URI is invalid, an admin must add ${redirectUri.replace(/callback$/, "*")} to the Valid Redirect URIs of the ${clientId} client.`
+    )), timeoutMs), finish = (err, value = "") => {
+      clearTimeout(timer), server.close(), err ? reject(err) : resolve(value);
+    };
+    server.on("error", (err) => finish(new Error(
+      `Could not listen on 127.0.0.1:${port} for the login callback (${err.message}). Set YGGIO_OAUTH_PORT to a free port registered in Keycloak.`
+    ))), server.listen(port, "127.0.0.1", () => {
+      process.stderr.write(`yggio-mcp: log in to Yggio in your browser: ${authUrl.href}
+`), openBrowser(authUrl.href);
+    });
+  }), res = await get("/auth/code", { code, client_id: clientId, redirect_uri: redirectUri }), token = res.body?.token;
+  if (res.status >= 400 || typeof token != "string")
+    throw new Error(`Exchanging the Keycloak code at /api/auth/code failed (HTTP ${res.status}).`);
+  return token;
+};
 
 // src/client.ts
 var YggioError = class extends Error {
@@ -17762,7 +17821,7 @@ var YggioError = class extends Error {
   constructor(config2, fetchImpl = fetch) {
     this.config = config2;
     this.fetchImpl = fetchImpl;
-    this.token = config2.token;
+    this.token = config2.token ?? (config2.browserLogin ? readCachedToken(config2.baseUrl) : void 0);
   }
   config;
   fetchImpl;
@@ -17772,11 +17831,15 @@ var YggioError = class extends Error {
     return this.config.baseUrl;
   }
   canLogin() {
-    return !!(this.config.username && this.config.password);
+    return this.config.browserLogin || !!(this.config.username && this.config.password);
   }
   async login() {
     if (!this.canLogin())
       throw new YggioError("The Yggio token was rejected or has expired, and no YGGIO_USERNAME/YGGIO_PASSWORD is set to log in again.");
+    if (this.config.browserLogin) {
+      let cached2 = readCachedToken(this.config.baseUrl);
+      return cached2 && cached2 !== this.token && (jwtSecondsLeft(cached2) ?? 0) > 60 ? this.token = cached2 : (this.token = await browserLogin(this.config.oauthPort, (p, q) => this.raw("GET", p, q, void 0, void 0)), saveCachedToken(this.config.baseUrl, this.token), this.token);
+    }
     let res = await this.raw("POST", "/auth/local", void 0, {
       username: this.config.username,
       password: this.config.password
@@ -17795,8 +17858,8 @@ var YggioError = class extends Error {
       this.loggingIn = void 0;
     }), this.loggingIn) : this.token;
   }
-  async raw(method, path, query, body, token) {
-    let url2 = new URL(`${this.config.baseUrl}/api${path}`);
+  async raw(method, path2, query, body, token) {
+    let url2 = new URL(`${this.config.baseUrl}/api${path2}`);
     appendQuery(url2, query);
     let headers = { accept: "application/json" };
     token && (headers.authorization = `Bearer ${token}`), body !== void 0 && (headers["content-type"] = "application/json");
@@ -17822,16 +17885,16 @@ var YggioError = class extends Error {
     return { status: res.status, body: text ? parsed : void 0 };
   }
   /** Calls the API, logging in first and once more if the token was rejected. */
-  async request(method, path, options = {}) {
-    let p = apiPath(path), res = await this.raw(method, p, options.query, options.body, await this.currentToken());
+  async request(method, path2, options = {}) {
+    let p = apiPath(path2), res = await this.raw(method, p, options.query, options.body, await this.currentToken());
     return res.status === 401 && this.canLogin() && (res = await this.raw(method, p, options.query, options.body, await this.currentToken(!0))), res;
   }
   /** Like request, but throws on HTTP errors. */
-  async call(method, path, options = {}) {
-    let res = await this.request(method, path, options);
+  async call(method, path2, options = {}) {
+    let res = await this.request(method, path2, options);
     if (res.status >= 400) {
       let detail = typeof res.body == "string" ? res.body : JSON.stringify(res.body);
-      throw new YggioError(`${method} /api${apiPath(path)} returned HTTP ${res.status}${detail ? `: ${detail.slice(0, 2e3)}` : ""}`, res.status, res.body);
+      throw new YggioError(`${method} /api${apiPath(path2)} returned HTTP ${res.status}${detail ? `: ${detail.slice(0, 2e3)}` : ""}`, res.status, res.body);
     }
     return res.body;
   }
@@ -19021,16 +19084,16 @@ var spec = openapi_default, METHODS = ["get", "post", "put", "patch", "delete"],
   }
   return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, expand(v, depth, seen)]));
 }, operations = Object.entries(spec.paths).flatMap(
-  ([path, item]) => METHODS.filter((m) => item[m]).map((m) => {
+  ([path2, item]) => METHODS.filter((m) => item[m]).map((m) => {
     let op = item[m], tags2 = Array.isArray(op.tags) ? op.tags : [], summary = firstLine(op.summary) || firstLine(op.description), params = Array.isArray(op.parameters) ? op.parameters.map((p) => typeof p.$ref == "string" ? refName(p.$ref) : String(p.name ?? "")).join(" ") : "";
     return {
       method: m.toUpperCase(),
-      path,
+      path: path2,
       operationId: typeof op.operationId == "string" ? op.operationId : void 0,
       tags: tags2,
       summary,
       deprecated: op.deprecated === !0,
-      haystack: [m, path, op.operationId, tags2.join(" "), op.summary, op.description, params].filter(Boolean).join(" ").toLowerCase()
+      haystack: [m, path2, op.operationId, tags2.join(" "), op.summary, op.description, params].filter(Boolean).join(" ").toLowerCase()
     };
   })
 ), tags = [...new Set(operations.flatMap((o) => o.tags))].sort(), tokenize = (q) => q.toLowerCase().split(/[^a-z0-9{}_-]+/).filter(Boolean).flatMap((t) => {
@@ -19146,7 +19209,7 @@ var render = (value, maxChars) => {
     value !== void 0 && (out[key] = key === "connector" && value && typeof value == "object" ? { _id: getPath(value, "_id"), name: getPath(value, "name") } : value);
   }
   return out;
-}, queryValue = union([string2(), number2(), boolean2(), array(union([string2(), number2()]))]), queryRecord = record(string2(), queryValue).optional().describe('Query string parameters as an object, e.g. {"limit": 10, "orderBy": "name"}.'), httpError = (method, path, status, body) => new YggioError(`${method} ${path} returned HTTP ${status}: ${render(body ?? "", 2e3)}`, status, body), registerTools = (server, config2, client) => {
+}, queryValue = union([string2(), number2(), boolean2(), array(union([string2(), number2()]))]), queryRecord = record(string2(), queryValue).optional().describe('Query string parameters as an object, e.g. {"limit": 10, "orderBy": "name"}.'), httpError = (method, path2, status, body) => new YggioError(`${method} ${path2} returned HTTP ${status}: ${render(body ?? "", 2e3)}`, status, body), registerTools = (server, config2, client) => {
   let max = config2.maxResponseChars;
   server.registerTool("yggio_whoami", {
     title: "Who am I in Yggio",
@@ -19262,10 +19325,10 @@ var render = (value, maxChars) => {
       query: queryRecord
     }),
     annotations: { readOnlyHint: !0, openWorldHint: !0 }
-  }, async ({ path, query }) => run(max, async () => {
-    let res = await client.request("GET", path, { query });
+  }, async ({ path: path2, query }) => run(max, async () => {
+    let res = await client.request("GET", path2, { query });
     if (res.status >= 400)
-      throw httpError("GET", path, res.status, res.body);
+      throw httpError("GET", path2, res.status, res.body);
     return res.body ?? { status: res.status };
   })), config2.readOnly || server.registerTool("yggio_api_write", {
     title: "Change data in Yggio",
@@ -19277,16 +19340,16 @@ var render = (value, maxChars) => {
       body: unknown().optional().describe("JSON request body.")
     }),
     annotations: { readOnlyHint: !1, destructiveHint: !0, idempotentHint: !1, openWorldHint: !0 }
-  }, async ({ method, path, query, body }) => run(max, async () => {
-    let res = await client.request(method, path, { query, body });
+  }, async ({ method, path: path2, query, body }) => run(max, async () => {
+    let res = await client.request(method, path2, { query, body });
     if (res.status >= 400)
-      throw httpError(method, path, res.status, res.body);
+      throw httpError(method, path2, res.status, res.body);
     return { status: res.status, body: res.body };
   }));
 };
 
 // src/server.ts
-var VERSION = "0.1.0", instructions = (config2) => `This server connects to the Yggio IoT platform at ${config2.baseUrl} as one logged-in user.
+var VERSION = "0.2.0", instructions = (config2) => `This server connects to the Yggio IoT platform at ${config2.baseUrl} as one logged-in user.
 
 - Yggio calls devices "iotnodes". Start with yggio_find_devices / yggio_get_device; history is in yggio_device_measurements + yggio_device_history.
 - Anything else (device groups, organizations, rules, reports, dashboards, locations, connectors, users...) goes through
@@ -19310,16 +19373,19 @@ var HELP = `yggio-mcp ${VERSION} - MCP server for the Yggio REST API (stdio)
 
 Environment:
   YGGIO_URL                 The address you open Yggio at in a browser (required)
-  YGGIO_USERNAME            Yggio username                             (required unless YGGIO_TOKEN)
-  YGGIO_PASSWORD            Yggio password                             (required unless YGGIO_TOKEN)
+  YGGIO_USERNAME            Yggio username
+  YGGIO_PASSWORD            Yggio password
   YGGIO_TOKEN               Use this token instead of logging in (not refreshed)
+                            Without password or token: log in through Keycloak in the browser
+                            (works with 2FA/SSO); the token is kept in ~/.yggio-mcp/tokens.json
+  YGGIO_OAUTH_PORT          Local port for the browser login callback (default 53682)
   YGGIO_READ_ONLY=true      Leave out the write tool
   YGGIO_TIMEOUT_MS          Per-request timeout (default 30000)
   YGGIO_MAX_RESPONSE_CHARS  Truncate tool output after this many characters (default 60000)
 
 Usage:
   yggio-mcp            Serve MCP over stdio (what Claude runs)
-  yggio-mcp --check    Log in, print who you are, and exit
+  yggio-mcp --check    Log in (opens the browser if needed), print who you are, and exit
   yggio-mcp --version
 `, main = async () => {
   let arg = process.argv[2];

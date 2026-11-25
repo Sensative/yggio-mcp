@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Packs dist/yggio-mcp.mjs into an MCP Bundle (.mcpb) that Claude Desktop
-// installs with a double click and a settings form (URL, user, password).
+// installs with a double click and a settings form (URL, optional user/password).
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
@@ -58,8 +58,13 @@ const manifest = {
       description: 'The address you open Yggio at in the browser, e.g. https://yggio.example.com',
       required: true,
     },
-    username: {type: 'string', title: 'Username', description: 'Your Yggio username.', required: true},
-    password: {type: 'string', title: 'Password', description: 'Your Yggio password.', sensitive: true, required: true},
+    username: {
+      type: 'string',
+      title: 'Username',
+      description: 'Your Yggio username. Leave username and password empty to log in in the browser (Keycloak, works with 2FA).',
+      required: false,
+    },
+    password: {type: 'string', title: 'Password', description: 'Your Yggio password.', sensitive: true, required: false},
     read_only: {
       type: 'boolean',
       title: 'Read-only',

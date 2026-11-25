@@ -5,6 +5,10 @@ export interface Config {
   password?: string;
   /** A ready token, used instead of username/password. Not refreshed. */
   token?: string;
+  /** No password and no token: log in through Keycloak in the browser (2FA/SSO accounts). */
+  browserLogin: boolean;
+  /** Local port for the browser login callback; http://127.0.0.1:<port>/* must be a Keycloak redirect URI. */
+  oauthPort: number;
   readOnly: boolean;
   timeoutMs: number;
   maxResponseChars: number;
@@ -36,14 +40,13 @@ export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => {
   const token = env.YGGIO_TOKEN?.trim() || undefined;
   const username = env.YGGIO_USERNAME?.trim() || undefined;
   const password = env.YGGIO_PASSWORD || undefined;
-  if (!token && !(username && password)) {
-    throw new Error('Set YGGIO_USERNAME and YGGIO_PASSWORD (or YGGIO_TOKEN).');
-  }
   return {
     baseUrl: normalizeBaseUrl(rawUrl),
     username,
     password,
     token,
+    browserLogin: !token && !(username && password),
+    oauthPort: intOr(env.YGGIO_OAUTH_PORT, 53682),
     readOnly: truthy(env.YGGIO_READ_ONLY),
     timeoutMs: intOr(env.YGGIO_TIMEOUT_MS, 30_000),
     maxResponseChars: intOr(env.YGGIO_MAX_RESPONSE_CHARS, 60_000),

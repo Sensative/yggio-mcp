@@ -3,6 +3,9 @@
 import {test, before, after} from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import fs from 'node:fs';
+import os from 'node:os';
+import {spawn} from 'node:child_process';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {Client} from '@modelcontextprotocol/client';
@@ -33,6 +36,25 @@ const server = http.createServer((req, res) => {
     if (url.pathname === '/api/auth/local' && req.method === 'POST') {
       if (body?.username !== 'demo-user' || body?.password !== 'hemligt') {
         return send(401, {message: 'bad credentials'});
+      }
+      state.logins += 1;
+      state.validToken = jwt(Math.floor(Date.now() / 1000) + 3600 + state.logins);
+      return send(200, {token: state.validToken});
+    }
+    // Keycloak browser login: /auth/info -> login page redirects back with a code -> /auth/code.
+    if (url.pathname === '/api/auth/info') {
+      return send(200, {authorizationEndpoint: `${baseUrl}/authorize`, clientId: 'yggio-services', scope: 'openid email'});
+    }
+    if (url.pathname === '/authorize') {
+      const back = new URL(url.searchParams.get('redirect_uri'));
+      back.search = new URLSearchParams({code: 'one-time-code', state: url.searchParams.get('state')}).toString();
+      res.writeHead(302, {location: back.href});
+      return res.end();
+    }
+    if (url.pathname === '/api/auth/code') {
+      if (url.searchParams.get('code') !== 'one-time-code' || url.searchParams.get('client_id') !== 'yggio-services' ||
+        !/^http:\/\/127\.0\.0\.1:\d+\/callback$/.test(url.searchParams.get('redirect_uri'))) {
+        return send(400, {message: 'bad code exchange'});
       }
       state.logins += 1;
       state.validToken = jwt(Math.floor(Date.now() / 1000) + 3600 + state.logins);
@@ -203,5 +225,59 @@ test('wrong password gives a clear error, not a crash', async () => {
     assert.match(res.text, /Login to .* as demo-user failed \(HTTP 401\)/);
   } finally {
     await client.close();
+  }
+});
+
+test('without a password, --check logs in through the browser and the MCP server reuses the token', async () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'yggio-mcp-home-'));
+  const port = await new Promise(resolve => {
+    const probe = http.createServer().listen(0, '127.0.0.1', () => {
+      const {port: free} = probe.address();
+      probe.close(() => resolve(free));
+    });
+  });
+  const env = {PATH: process.env.PATH, HOME: home, BROWSER: 'none', YGGIO_URL: baseUrl, YGGIO_OAUTH_PORT: String(port)};
+  try {
+    const child = spawn(process.execPath, [bundle, '--check'], {env});
+    let stdout = '';
+    child.stdout.on('data', c => { stdout += c; });
+    // Play the browser: follow the login URL printed on stderr (fetch follows the redirect to the callback).
+    const loginUrl = await new Promise((resolve, reject) => {
+      let err = '';
+      child.stderr.on('data', c => {
+        err += c;
+        const m = /in your browser: (\S+)/.exec(err);
+        if (m) {
+          resolve(m[1]);
+        }
+      });
+      child.on('exit', () => reject(new Error(`exited before printing a login URL: ${err}`)));
+    });
+    assert.match(loginUrl, /redirect_uri=http%3A%2F%2F127\.0\.0\.1%3A\d+%2Fcallback/);
+    const page = await fetch(loginUrl);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /Inloggad/);
+    await new Promise(resolve => child.on('exit', resolve));
+    assert.match(stdout, /OK: logged in .* as demo-user/);
+
+    const cached = JSON.parse(fs.readFileSync(path.join(home, '.yggio-mcp/tokens.json'), 'utf8'));
+    assert.equal(cached[baseUrl], state.validToken);
+    if (process.platform !== 'win32') {
+      assert.equal(fs.statSync(path.join(home, '.yggio-mcp/tokens.json')).mode & 0o777, 0o600);
+    }
+
+    const loginsBefore = state.logins;
+    const transport = new StdioClientTransport({command: process.execPath, args: [bundle], env, stderr: 'pipe'});
+    const client = new Client({name: 'e2e', version: '0'});
+    await client.connect(transport);
+    try {
+      const who = await call(client, 'yggio_whoami');
+      assert.equal(who.isError, false, who.text);
+      assert.equal(state.logins, loginsBefore, 'the cached token is used without a new login');
+    } finally {
+      await client.close();
+    }
+  } finally {
+    fs.rmSync(home, {recursive: true, force: true});
   }
 });

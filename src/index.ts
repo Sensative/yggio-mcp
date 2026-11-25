@@ -7,16 +7,19 @@ const HELP = `yggio-mcp ${VERSION} - MCP server for the Yggio REST API (stdio)
 
 Environment:
   YGGIO_URL                 The address you open Yggio at in a browser (required)
-  YGGIO_USERNAME            Yggio username                             (required unless YGGIO_TOKEN)
-  YGGIO_PASSWORD            Yggio password                             (required unless YGGIO_TOKEN)
+  YGGIO_USERNAME            Yggio username
+  YGGIO_PASSWORD            Yggio password
   YGGIO_TOKEN               Use this token instead of logging in (not refreshed)
+                            Without password or token: log in through Keycloak in the browser
+                            (works with 2FA/SSO); the token is kept in ~/.yggio-mcp/tokens.json
+  YGGIO_OAUTH_PORT          Local port for the browser login callback (default 53682)
   YGGIO_READ_ONLY=true      Leave out the write tool
   YGGIO_TIMEOUT_MS          Per-request timeout (default 30000)
   YGGIO_MAX_RESPONSE_CHARS  Truncate tool output after this many characters (default 60000)
 
 Usage:
   yggio-mcp            Serve MCP over stdio (what Claude runs)
-  yggio-mcp --check    Log in, print who you are, and exit
+  yggio-mcp --check    Log in (opens the browser if needed), print who you are, and exit
   yggio-mcp --version
 `;
 

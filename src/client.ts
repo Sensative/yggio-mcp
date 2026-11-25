@@ -1,4 +1,5 @@
 import type {Config} from './config.js';
+import {browserLogin, readCachedToken, saveCachedToken} from './oauth.js';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type Query = Record<string, string | number | boolean | Array<string | number> | undefined>;
@@ -70,7 +71,7 @@ export class YggioClient {
     private readonly config: Config,
     private readonly fetchImpl: typeof fetch = fetch,
   ) {
-    this.token = config.token;
+    this.token = config.token ?? (config.browserLogin ? readCachedToken(config.baseUrl) : undefined);
   }
 
   get baseUrl() {
@@ -78,12 +79,22 @@ export class YggioClient {
   }
 
   private canLogin() {
-    return Boolean(this.config.username && this.config.password);
+    return this.config.browserLogin || Boolean(this.config.username && this.config.password);
   }
 
   private async login(): Promise<string> {
     if (!this.canLogin()) {
       throw new YggioError('The Yggio token was rejected or has expired, and no YGGIO_USERNAME/YGGIO_PASSWORD is set to log in again.');
+    }
+    if (this.config.browserLogin) {
+      // Another Claude session may already have logged in.
+      const cached = readCachedToken(this.config.baseUrl);
+      if (cached && cached !== this.token && (jwtSecondsLeft(cached) ?? 0) > 60) {
+        return this.token = cached;
+      }
+      this.token = await browserLogin(this.config.oauthPort, (p, q) => this.raw('GET', p, q, undefined, undefined));
+      saveCachedToken(this.config.baseUrl, this.token);
+      return this.token;
     }
     const res = await this.raw('POST', '/auth/local', undefined, {
       username: this.config.username,

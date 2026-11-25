@@ -4,7 +4,7 @@ import {YggioClient} from './client.js';
 import {registerTools} from './tools.js';
 import {spec} from './spec.js';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
 export const instructions = (config: Config) => `This server connects to the Yggio IoT platform at ${config.baseUrl} as one logged-in user.
 

@@ -69,7 +69,7 @@ const manifest = {
     },
   },
   compatibility: {platforms: ['darwin', 'win32', 'linux'], runtimes: {node: '>=20.0.0'}},
-  license: 'UNLICENSED',
+  license: 'MIT',
 };
 
 fs.writeFileSync(path.join(stage, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
